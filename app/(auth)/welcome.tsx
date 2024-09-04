@@ -1,5 +1,5 @@
 import { router } from "expo-router";
-import { Text, Touchable, TouchableOpacity } from "react-native";
+import { Text, TouchableOpacity } from "react-native";
 import { SafeAreaView } from "react-native-safe-area-context";
 
 export default function OnBoarding() {
