@@ -1,12 +1,6 @@
 import * as SecureStore from "expo-secure-store";
 
-interface TokenCache {
-  getToken: (key: string) => Promise<string | undefined | null>;
-  saveToken: (key: string, token: string) => Promise<void>;
-  clearToken?: (key: string) => void;
-}
-
-export const tokenCache: TokenCache = {
+const tokenCache = {
   async getToken(key: string) {
     try {
       const item = await SecureStore.getItemAsync(key);
@@ -26,14 +20,8 @@ export const tokenCache: TokenCache = {
     try {
       return SecureStore.setItemAsync(key, value);
     } catch (err) {
-      return ;
-    }
-  },
-  async clearToken(key: string) {
-    try {
-      return SecureStore.deleteItemAsync(key);
-    } catch (err) {
       return;
     }
   },
 };
+export default tokenCache;
