@@ -15,6 +15,7 @@ import {
   View,
 } from "react-native";
 import { useRouter } from "expo-router";
+import { fetchAPI } from "@/lib/fetch";
 
 export default function SignUp() {
   const { isLoaded, signUp, setActive } = useSignUp();
@@ -65,6 +66,14 @@ export default function SignUp() {
 
       if (completeSignUp.status === "complete") {
         //TODO: now we can create the user account
+        await fetchAPI("/api/user", {
+          method: "POST",
+          body: JSON.stringify({
+            name: form.name,
+            email: form.email,
+            clerkId: completeSignUp.createdUserId,
+          }),
+        });
         await setActive({ session: completeSignUp.createdSessionId });
         setVerification({
           ...verification,

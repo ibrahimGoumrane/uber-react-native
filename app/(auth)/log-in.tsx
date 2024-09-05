@@ -3,20 +3,45 @@ import InputField from "@/components/inputField";
 import CustomLink from "@/components/link";
 import OAuth from "@/components/OAuth";
 import { icons, images } from "@/constants";
-import { useState } from "react";
+import { useCallback, useState } from "react";
 import { ScrollView, Text, Image, View } from "react-native";
+import { useRouter } from "expo-router";
+import { ClerkAPIError } from "@clerk/types";
+import { useSignIn } from "@clerk/clerk-expo";
 
 export default function LogIn() {
+  const { signIn, setActive, isLoaded } = useSignIn();
+  const router = useRouter();
+  const [errors, setErrors] = useState<ClerkAPIError[]>([]);
   const [form, setForm] = useState({
     email: "",
     password: "",
   });
-  const handleLogIn = () => {
-    if (!form.password || !form.email) {
-      alert("Please fill all the fields");
+  const onLogInPress = useCallback(async () => {
+    if (!isLoaded) {
       return;
     }
-  };
+
+    try {
+      const signInAttempt = await signIn.create({
+        identifier: form.email,
+        password: form.password,
+      });
+
+      if (signInAttempt.status === "complete") {
+        await setActive({ session: signInAttempt.createdSessionId });
+        router.replace("/(root)/(tabs)/home");
+      } else {
+        // See https://clerk.com/docs/custom-flows/error-handling
+        // for more info on error handling
+        console.error(JSON.stringify(signInAttempt, null, 2));
+      }
+    } catch (err: any) {
+      console.log(err.errors);
+      setErrors(err.errors);
+      console.error(JSON.stringify(err, null, 2));
+    }
+  }, [isLoaded, form.email, form.password]);
   return (
     <ScrollView className="flex-1 bg-white">
       <View className="flex-1 bg-white">
@@ -43,10 +68,22 @@ export default function LogIn() {
             onChangeText={(text) => setForm({ ...form, password: text })}
           />
         </View>
+        {errors.length !== 0 && (
+          <View className="mb-2 mx-2">
+            {errors.map((el, index) => (
+              <Text
+                key={index}
+                className="text-red-400 text-sm font-JakartaBold"
+              >
+                {el.longMessage}
+              </Text>
+            ))}
+          </View>
+        )}
         <View className="flex items-center justify-center w-3/4 mx-auto ">
           <CustomButton
             title={"Log In"}
-            onPress={handleLogIn}
+            onPress={onLogInPress}
             textVariant="default"
           />
         </View>
