@@ -21,7 +21,7 @@ const customButton = ({
     >
       {IconLeft && <IconLeft />}
       <Text
-        className={`${getTextVariantStyle(textVariant)}  text-lg font-bold text-center `}
+        className={`${getTextVariantStyle(textVariant)}  text-white text-lg font-bold text-center `}
       >
         {title}
       </Text>

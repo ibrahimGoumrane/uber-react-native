@@ -26,7 +26,6 @@ export const useFetch = <T>(url: string, options?: RequestInit) => {
   const [data, setData] = useState<T | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
   const fetchData = useCallback(async () => {
     setLoading(true);
     setError(null);
@@ -43,7 +42,7 @@ export const useFetch = <T>(url: string, options?: RequestInit) => {
 
   useEffect(() => {
     fetchData();
-  }, [fetchData]);
+  }, []);
 
   return { data, loading, error, refetch: fetchData };
 };

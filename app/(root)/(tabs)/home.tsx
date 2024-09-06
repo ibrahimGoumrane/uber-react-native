@@ -15,6 +15,7 @@ import {
 } from "react-native";
 import * as Location from "expo-location";
 import { SafeAreaView } from "react-native-safe-area-context";
+import { router } from "expo-router";
 const recentRides = [
   {
     ride_id: "1",
@@ -139,7 +140,7 @@ export default function Page() {
         setUserLocation({
           latitude: location.coords.latitude!,
           longitude: location.coords.longitude!,
-          address: `${address[0].name!} , ${address[0].region!}`,
+          address: `${address[0].city!} , ${address[0].country!}`,
         });
       }
     };
@@ -147,10 +148,17 @@ export default function Page() {
   }, []);
   const loading = false;
   function handleSignOut(): void {}
-  function handleDestinationSearch(): void {}
+  function handleDestinationSearch(location: {
+    latitude: number;
+    longitude: number;
+    address: string;
+  }): void {
+    setDestinationLocation(location);
+    router.replace("/(root)/(pages)/findRide");
+  }
 
   return (
-    <SafeAreaView className="">
+    <SafeAreaView>
       <FlatList
         data={recentRides?.slice(0, 5)}
         className="px-5 "
