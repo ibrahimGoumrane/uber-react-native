@@ -21,8 +21,8 @@ import { Ride } from "@/types/type";
 
 export default function Page() {
   const { setDestinationLocation, setUserLocation } = useLocationStore();
-  const { user } = useUser();
   const { signOut } = useAuth();
+  const { user } = useUser();
   const { data: recentRides, loading } = useFetch<Ride[]>(
     `/api/ride/${user?.id}`
   );
@@ -63,7 +63,7 @@ export default function Page() {
   return (
     <SafeAreaView>
       <FlatList
-        data={recentRides}
+        data={recentRides?.slice(0, 5)}
         className="px-5 "
         renderItem={({ item }) => <RideCard ride={item} />}
         keyboardShouldPersistTaps="handled"

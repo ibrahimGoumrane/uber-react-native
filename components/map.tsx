@@ -45,7 +45,6 @@ export default function Map() {
     }
   }, [drivers, userLatitude, userLongitude]);
   useEffect(() => {
-    console.log(markers, destinationLatitude, destinationLongitude);
     if (markers.length > 0 && destinationLatitude && destinationLongitude) {
       calculateDriverTimes({
         markers,

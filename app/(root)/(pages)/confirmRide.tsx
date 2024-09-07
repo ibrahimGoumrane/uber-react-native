@@ -8,7 +8,6 @@ import { FlatList } from "react-native-gesture-handler";
 
 export default function FindRide() {
   const { drivers, selectedDriver, setSelectedDriver } = useDriverStore();
-  console.log(drivers);
   return (
     <RideLayout title="Choose a Driver" snapPoints={["65%", "85%"]}>
       <FlatList

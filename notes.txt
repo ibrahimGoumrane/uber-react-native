@@ -1,0 +1,7 @@
+//payment description key features
+
+// Summary of Roles
+// Payment Method: Represents how a customer will pay (e.g., credit card). It is attached to a customer and used in payment intents.
+// Payment Intent: Manages the lifecycle of a payment, from creation to confirmation. It includes details about the payment and handles complex scenarios.
+// Ephemeral Key: A temporary key used for secure interactions between the client and Stripe API.
+// Payment Sheet: A UI component that collects payment information from the user and finalizes the payment process.
