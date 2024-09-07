@@ -1,9 +1,15 @@
-import { useStripe } from "@stripe/stripe-react-native";
-import CustomButton from "./customButton";
-import { Alert } from "react-native";
-import { useState } from "react";
-import { PaymentProps } from "@/types/type";
 import { fetchAPI } from "@/lib/fetch";
+import { useLocationStore } from "@/store";
+import { PaymentProps } from "@/types/type";
+import { useAuth } from "@clerk/clerk-expo";
+import { useStripe } from "@stripe/stripe-react-native";
+import { useState } from "react";
+import { Alert, Image, Text, View } from "react-native";
+import CustomButton from "./customButton";
+import ReactNativeModal from "react-native-modal";
+import { images } from "@/constants";
+import { router } from "expo-router";
+import { parse } from "@babel/core";
 export default function Payment({
   fullName,
   email,
@@ -13,62 +19,84 @@ export default function Payment({
 }: PaymentProps) {
   const { initPaymentSheet, presentPaymentSheet } = useStripe();
   const [suceess, setSuccess] = useState(false);
+  const {
+    userAddress,
+    userLatitude,
+    userLongitude,
+    destinationAddress,
+    destinationLatitude,
+    destinationLongitude,
+  } = useLocationStore();
+  const { userId } = useAuth();
 
-  const confirmHandler = async function (
-    paymentMethod,
-    savePaymentMethod,
-    intentCreationCallback
-  ) {
-    const { paymentIntent, customer } = await fetchAPI("/api/create", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        name: fullName || email.split("@")[0],
-        email: email,
-        amount: amount,
-        paymentMethodId: paymentMethod.id,
-      }),
-    });
-
-    if (paymentIntent.client_secret) {
-      const { result } = await fetchAPI("/api/stripe/pay", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          payment_method_id: paymentMethod.id,
-          payment_intent_id: paymentIntent.id,
-          cutomer_id: customer.id,
-        }),
-      });
-      if (result.client_secret) {
-        //ride/create
-      }
-    }
-
-    const { clientSecret, error } = await response.json();
-    if (clientSecret) {
-      intentCreationCallback({ clientSecret });
-    } else {
-      intentCreationCallback({ error });
-    }
-  };
   const initializePaymentSheet = async () => {
     const { error } = await initPaymentSheet({
-      merchantDisplayName: "Example, Inc.",
+      merchantDisplayName: "Ryde, Inc.",
       intentConfiguration: {
         mode: {
-          amount: 1099,
+          amount: parseInt(amount) * 100,
           currencyCode: "USD",
         },
-        confirmHandler: confirmHandler,
+        confirmHandler: async function (
+          paymentMethod,
+          savePaymentMethod,
+          intentCreationCallback
+        ) {
+          const { paymentIntent, customer } = await fetchAPI("/api/create", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              name: fullName || email.split("@")[0],
+              email: email,
+              amount: amount,
+              paymentMethodId: paymentMethod.id,
+            }),
+          });
+
+          if (paymentIntent.client_secret) {
+            const { result } = await fetchAPI("/api/stripe/pay", {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({
+                payment_method_id: paymentMethod.id,
+                payment_intent_id: paymentIntent.id,
+                cutomer_id: customer.id,
+              }),
+            });
+            if (result.client_secret) {
+              //ride/create
+              await fetchAPI("/api/ride/create", {
+                method: "POST",
+                headers: {
+                  contentType: "application/json",
+                },
+                body: JSON.stringify({
+                  origin_address: userAddress,
+                  destination_address: destinationAddress,
+                  origin_latitude: userLatitude,
+                  origin_longitude: userLongitude,
+                  destination_latitude: destinationLatitude,
+                  destination_longitude: destinationLongitude,
+                  ride_time: rideTime.toFixed(0),
+                  fare_price: parseInt(amount) * 100,
+                  payment_status: "paid",
+                  driver_id: driverId,
+                  user_id: userId,
+                }),
+              });
+              intentCreationCallback({ clientSecret: result.client_secret });
+            }
+          }
+        },
       },
+      returnURL: "payments-example://stripe-redirect",
     });
     if (error) {
-      // handle error
+      console.error(error);
     }
   };
   const openPaymentSheet = async () => {
@@ -88,6 +116,30 @@ export default function Payment({
         className="my-10 "
         onPress={openPaymentSheet}
       />
+      <ReactNativeModal
+        isVisible={suceess}
+        onBackdropPress={() => setSuccess(false)}
+      >
+        <View className="flex flex-col items-center justify-center bg-white p-7 rounded-2xl">
+          <Image source={images.check} className="w-28 mt-5 h-28" />
+          <Text className="text-2xl text-center font-JakartaBold mt-5">
+            Ride Confirmed
+          </Text>
+          <Text className="text-md text-general-200 font-JakartaMedium text-center mt-3">
+            {" "}
+            Your ride has been confirmed. You will be notified when the driver
+            arrives.
+          </Text>
+          <CustomButton
+            title="back to home"
+            onPress={() => {
+              setSuccess(false);
+              router.push("/(root)/(tabs)/home");
+            }}
+            className="mt-5"
+          />
+        </View>
+      </ReactNativeModal>
     </>
   );
 }
